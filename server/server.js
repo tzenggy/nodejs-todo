@@ -19,6 +19,19 @@ app.post('/todos', (req, res) => {
 	todo.save().then((doc) => {res.send(doc)}, (e) => {res.status(400).send(e);});
 });
 
+app.get('/todos', (req, res) => {
+	// this todos returned a array in the success case of then
+	Todo.find().then((todos) => {
+		// if we find all the todos, we want to send the info out
+		// object is a better data structure than array because
+		// object can add additional properties, ie status code, 
+		// while array cannot achieve the same
+		res.send({todos})
+	}, (err) => {
+		res.status(400).send(e);
+	});
+});
+
 
 app.listen(3000, () => {
 	console.log('Started on port 3000');
