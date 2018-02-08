@@ -4,6 +4,6 @@ var mongoose = require('mongoose');
 // This line of code tells mongoose to use the built-in library for Promise, not some third party libraries.
 mongoose.Promise = global.Promise;
 
-mongoose.connect('mongodb://localhost:27017/TodoApp');	
+mongoose.connect('mongodb://localhost:27017/TodoApp'/* || 'mongodb://tzenzachary:marchtenth0310@ds229878.mlab.com:29878/todoapp'*/);	
 
 module.exports = {mongoose};

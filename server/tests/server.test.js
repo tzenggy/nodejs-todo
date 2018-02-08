@@ -120,4 +120,12 @@ describe('GET /todos/:id', () => {
 			.expect(404)
 			.end(done);
 	})
-})
+});
+
+// describe('DELETE /todos/:id', () => {
+// 	it('should return deleted doc', (done) => {
+// 		request(app)
+// 			.delete(`/todos/${todos[3]._id.toHexString()}`)
+// 			.
+// 	})
+// });
