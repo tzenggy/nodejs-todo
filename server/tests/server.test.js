@@ -1,12 +1,24 @@
 const expect = require('expect');
 const request = require('supertest');
-
+const {ObjectID} = require('mongodb');
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
 
 
 // we need a dummy array of todos for testing GET /todos because we assume the database isn't empty
-const todos = [{text: 'Postman task1'}, {text: 'Postman task2'}, {text: 'Postman task3'}, {text: 'Postman task4'}];
+const todos = [{
+	// adding _ad and ObjectID constructor make the id available
+	_id: new ObjectID(),
+	text: 'Postman task1'
+}, {
+	_id: new ObjectID(),
+	text: 'Postman task2'
+}, {
+	_id: new ObjectID(),
+	text: 'Postman task3'
+}, {
+	_id: new ObjectID(),
+	text: 'Postman task4'}];
 
 
 
@@ -80,3 +92,32 @@ describe('GET /todos', () => {
 			.end(done);
 	});
 });
+
+describe('GET /todos/:id', () => {
+	it('should return todo doc', (done) => {
+		request(app)
+			.get(`/todos/${todos[0]._id.toHexString()}`)
+			.expect(200)
+			.expect((res) => {
+				// console.log('abc');
+				// console.log(res.body);
+				expect(res.body.todo.text).toBe(todos[0].text);
+			})
+			.end(done);
+	});
+
+	it('should return 404 if todo not found', (done) => {
+		var hexId = new ObjectID().toHexString();
+		request(app)
+			.get(`/todos/${hexId}`)
+			.expect(404)
+			.end(done);
+	});
+
+	it('should return 404 for non-object ids', (done) => {
+		request(app)
+			.get(`/todos/123`)
+			.expect(404)
+			.end(done);
+	})
+})
