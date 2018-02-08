@@ -122,10 +122,45 @@ describe('GET /todos/:id', () => {
 	})
 });
 
-// describe('DELETE /todos/:id', () => {
-// 	it('should return deleted doc', (done) => {
-// 		request(app)
-// 			.delete(`/todos/${todos[3]._id.toHexString()}`)
-// 			.
-// 	})
-// });
+describe('DELETE /todos/:id', () => {
+	// it('should return deleted doc', (done) => {
+	// we need to check that this returns a doc and also verify that this doc is removed from the database
+	it('should remove a todo', (done) => {
+		var hexId = todos[2]._id.toHexString();
+		request(app)
+			.delete(`/todos/${hexId}`)
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.todo.text).toBe(todos[2].text);
+			})
+			// end wraps up this test and can receive a callback function as argument
+				// takes error and res as arguments
+			// define what to do after the test above is over
+			.end((err, res) => {
+				if (err) {
+					return done(err);
+				}
+				// findById return success even if the id cannot be found in the collection as long as it's a valid id
+				Todo.findById(hexId).then((doc) => {
+					expect(doc).toBeFalsy();
+					done();
+				}).catch((e) => {done(e)});
+			});
+	});
+
+	it('should return 404 if todo not found', (done) => {
+		var hexId = new ObjectID().toHexString();
+		request(app)
+			.delete(`/todos/${hexId}`)
+			.expect(404)
+			.end(done);
+	});
+
+	it('should return 404 if object id invalid', (done) => {
+		request(app)
+			.delete('/todos/123123')
+			.expect(404)
+			.end(done);
+	});
+
+});

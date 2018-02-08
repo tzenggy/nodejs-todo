@@ -60,7 +60,7 @@ app.delete('/todos/:id', (req, res) => {
 		if (!todo) {
 			return res.status(404).send("empty todo");
 		}
-		res.status(200).send('Todo removed', todo);
+		res.status(200).send({todo});
 	}/*, (e) => {
 		return res.status(400).send("error");
 	} don't need the second error handling, simply use catch */).catch((e) => {
