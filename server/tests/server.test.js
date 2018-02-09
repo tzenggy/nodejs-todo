@@ -12,13 +12,18 @@ const todos = [{
 	text: 'Postman task1'
 }, {
 	_id: new ObjectID(),
-	text: 'Postman task2'
+	text: 'Postman task2',
+	completed: true,
+	completedAt: 123
 }, {
 	_id: new ObjectID(),
 	text: 'Postman task3'
 }, {
 	_id: new ObjectID(),
-	text: 'Postman task4'}];
+	text: 'Postman task4',
+	completed: true,
+	completedAt: 3333
+}];
 
 
 
@@ -163,4 +168,31 @@ describe('DELETE /todos/:id', () => {
 			.end(done);
 	});
 
+});
+
+describe('PATCH /todos/:id', () => {
+	it('should update the todo', (done) => {
+		var hexId = todos[2]._id.toHexString();
+		request(app)
+			.patch(`/todos/${hexId}`)
+			.send({completed: true})
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.todo.completed).toBe(true);
+				expect(res.body.todo.completedAt).toBeTruthy();
+			})
+			.end(done);
+	});
+
+	it('should clear completedAt when todo is not completed', (done) => {
+		var hexId = todos[1]._id.toHexString();
+		request(app)
+			.patch(`/todos/${hexId}`)
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.todo.completed).toBe(false);
+				expect(res.body.todo.completedAt).toBeFalsy();
+			})
+			.end(done);
+	});
 });
