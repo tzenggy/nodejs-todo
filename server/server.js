@@ -100,6 +100,35 @@ app.patch('/todos/:id', (req, res) => {
 	});
 });
 
+// We will define model method and instance method
+	// model method is like static method of a model
+		// ie, findByToken
+	// instance method is like regular method of a class
+		// ie, generateAuthToken is an instance method
+
+
+app.post('/users', (req, res) => {
+	var body = _.pick(req.body, ['email', 'password']);
+	var user = new User(body);
+
+	// user.save().then((user) => {res.send(user)}, (err) => {res.status(400).send(err)});
+	user.save().then((user) => {
+		return user.generateAuthToken();
+		// res.send(user)
+	}).then((token) => {
+		// header() takes a key value pair for its arguments
+			// they are what we want to store in the header of the request
+		// when the key of a header pair starts with 'x-' it means this key value pair is a custom header pair
+			// meaning that this is not standard HTTP header but one for our own purposes
+		res.header('x-auth', token).send(user);
+	})
+	.catch((err) => {
+		res.status(400).send(err)
+	});
+});
+
+
+
 
 app.listen(port, () => {
 	console.log(`Started on port ${port}`);
