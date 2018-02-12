@@ -79,6 +79,37 @@ UserSchema.methods.generateAuthToken = function () {
 	});
 };
 
+// .statics creates a model method (static method of the model) 
+// again use function () {} because we need this binding
+UserSchema.statics.findByToken = function (token) {
+	// call this variable User because it represents the User model, not just any instance of the User model
+	var User = this;
+	// decoded will store the decoded jwt value => return result of jwt.verify
+	var decoded;
+
+	// Use try catch block because jwt.verify will return an error if anything goes wrong
+		// ie, manipulated token, wrong password, ...
+	try {
+		decoded = jwt.verify(token, 'secretvalue1');
+	} catch (e) {
+		//	// return because we don't want what's after the try catch block to run if jwt.verify fails
+		// return new Promise((resolve, reject) => {
+		// 	reject();
+		// })
+		// 	// The above is the same as 
+		//	// This reject can take an argument that will be the error object in the function that chain this promise
+		return Promise.reject();
+	}
+
+	// findOne returns a promise. If we want to chain it we can return it to the caller of this method
+	return User.findOne({
+		_id: decoded._id,
+		// nested key in an array
+		'tokens.token': token,
+		'tokens.access': 'auth'
+	})
+}
+
 var User = mongoose.model('User', UserSchema);
 
 module.exports = {User};

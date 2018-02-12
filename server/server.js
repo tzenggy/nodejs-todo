@@ -9,6 +9,7 @@ const _ = require('lodash');
 var {mongoose} = require('./db/mongoose.js');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
+var {authenticate} = require('./middleware/authenticate');
 
 var app = express();
 
@@ -112,6 +113,8 @@ app.post('/users', (req, res) => {
 	var user = new User(body);
 
 	// user.save().then((user) => {res.send(user)}, (err) => {res.status(400).send(err)});
+	// model.save returns a promise
+		// generate tokens only after user is successfully created
 	user.save().then((user) => {
 		return user.generateAuthToken();
 		// res.send(user)
@@ -127,7 +130,56 @@ app.post('/users', (req, res) => {
 	});
 });
 
+// // // // This is moved to another file authenticate.js
+// var authenticate = (req, res, next) {
+// 	// different from res.header() where we set the header key-value pair, req.header() gets the header info so we only supply the key name
+// 	var token = req.header('x-auth');
 
+// 	// This model method will find the appropriate user based on the token info in the request header
+// 	// check that the token is correct
+// 	User.findByToken(token).then((user) => {
+// 		// We want to call res.status(401).send() but since this line already exists in the catch block, we can reject here and let catch block catch it
+// 		if (!user) {
+// 			return Promise.reject();
+// 		}
+// 		// // rather than sending the user back, we want to update body of the request
+// 		// res.send(user);
+// 		req.user = user;
+// 		req.token = token;
+// 		next();
+// 	})
+// 	.catch((e) => {
+// 		// 401 means authentication didn't succeed
+// 		res.status(401).send();
+// 	});
+// }
+
+// this will be private route which requires authentication to see
+// add middleware name after the route string
+app.get('/users/me', authenticate, (req, res) => {
+
+	//	in the middleware user stores all the desired properties to return
+	res.send(req.user);
+
+	// // // This will be reused by having it inside a middleware
+
+	// // different from res.header() where we set the header key-value pair, req.header() gets the header info so we only supply the key name
+	// var token = req.header('x-auth');
+
+	// // This model method will find the appropriate user based on the token info in the request header
+	// // check that the token is correct
+	// User.findByToken(token).then((user) => {
+	// 	// We want to call res.status(401).send() but since this line already exists in the catch block, we can reject here and let catch block catch it
+	// 	if (!user) {
+	// 		return Promise.reject();
+	// 	}
+	// 	res.send(user);
+	// })
+	// .catch((e) => {
+	// 	// 401 means authentication didn't succeed
+	// 	res.status(401).send();
+	// });
+})
 
 
 app.listen(port, () => {
