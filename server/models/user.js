@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 // UserSchema define properties of the documents inside the collection
 // we use mongoose built in constructor for schema
@@ -108,7 +109,26 @@ UserSchema.statics.findByToken = function (token) {
 		'tokens.token': token,
 		'tokens.access': 'auth'
 	})
-}
+};
+
+
+// At this point the POST request header will contain the plain text version of the password
+UserSchema.pre('save', function (next) {
+	var user = this;
+
+	// if the user modifies the password, this password will have to be plain text, and we need to hash it again
+	if (user.isModified('password')) {
+		bcrypt.genSalt(5, (err, salt) => {
+			bcrypt.hash(user.password, salt, (err, hash) => {
+				user.password = hash;
+				next();
+			})
+		})
+
+	} else {
+		next();
+	}
+})
 
 var User = mongoose.model('User', UserSchema);
 

@@ -1,6 +1,23 @@
 const {SHA256} = require('crypto-js');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
+var password = '123abc!';
+
+//	salt helps generate random text after password and hash that instead
+// genSalt takes 2 arguments, number of times to run this algo and callback function
+bcrypt.genSalt(10, (err, salt) => {
+	bcrypt.hash(password, salt, (err, hash) => {
+		// console.log(hash);
+	})
+})
+
+var hashedPassword = '$2a$10$VUt7QcmGwos4Gb5WIspBEe.3MuI0RHwxiyRdhpx8.EzuqvgQCblzG';
+
+// res === true if compared to be same
+bcrypt.compare('123abc', hashedPassword, (err, res) => {
+	console.log(res);
+})
 
 // jsonwebtoken module has two main functions, create token and verify token
 	// we don't need a long list of if else statements anymore
@@ -13,24 +30,24 @@ const jwt = require('jsonwebtoken');
 		// if either the token or the secret string is changed, jwt.verify will return an error
 
 
-var data = {
-	id: 10
-};
+// var data = {
+// 	id: 10
+// };
 
-var data2 = {
-	id: 5
-}
+// var data2 = {
+// 	id: 5
+// }
 
-var token1 = jwt.sign(data, '123abc');
+// var token1 = jwt.sign(data, '123abc');
 
-var token2 = jwt.sign(data2, 'secret2');
+// var token2 = jwt.sign(data2, 'secret2');
 
-var decoded = jwt.verify(token1, '123abc');
+// var decoded = jwt.verify(token1, '123abc');
 
-var decoded2 = jwt.verify(token2, 'secret2');
+// var decoded2 = jwt.verify(token2, 'secret2');
 
-console.log('decoded', decoded);
-console.log('decoded2', decoded2);
+// console.log('decoded', decoded);
+// console.log('decoded2', decoded2);
 
 // var message = 'Wahahaha I am';
 // // SHA256 returns an object, so we use toString to convert it to a string
