@@ -3,39 +3,42 @@ const request = require('supertest');
 const {ObjectID} = require('mongodb');
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
 
-// we need a dummy array of todos for testing GET /todos because we assume the database isn't empty
-const todos = [{
-	// adding _ad and ObjectID constructor make the id available
-	_id: new ObjectID(),
-	text: 'Postman task1'
-}, {
-	_id: new ObjectID(),
-	text: 'Postman task2',
-	completed: true,
-	completedAt: 123
-}, {
-	_id: new ObjectID(),
-	text: 'Postman task3'
-}, {
-	_id: new ObjectID(),
-	text: 'Postman task4',
-	completed: true,
-	completedAt: 3333
-}];
+// // we need a dummy array of todos for testing GET /todos because we assume the database isn't empty
+// const todos = [{
+// 	// adding _ad and ObjectID constructor make the id available
+// 	_id: new ObjectID(),
+// 	text: 'Postman task1'
+// }, {
+// 	_id: new ObjectID(),
+// 	text: 'Postman task2',
+// 	completed: true,
+// 	completedAt: 123
+// }, {
+// 	_id: new ObjectID(),
+// 	text: 'Postman task3'
+// }, {
+// 	_id: new ObjectID(),
+// 	text: 'Postman task4',
+// 	completed: true,
+// 	completedAt: 3333
+// }];
 
 
-
+beforeEach(populateUsers);
 // beforeeach() takes a function which has done as its argument
 // beforeeach is called before each test is run
 	// can be used to setup test database
-beforeEach((done) => {
+beforeEach(/*(done) => {
 	// this removes the collection to ensure the tests after can work properly
 	Todo.remove({}).then(() => {
 		return Todo.insertMany(todos);	
 	}).then(() => done());
-});
+}*/
+populateTodos);
 
 describe('POST /todos', () => {
 	it('should create a new todo', (done) => {
@@ -196,3 +199,83 @@ describe('PATCH /todos/:id', () => {
 			.end(done);
 	});
 });
+
+describe('GET /users/me', () => {
+	it('should return user if authenticated', (done) => {
+		request(app)
+			.get('/users/me')
+			.set('x-auth', users[0].tokens[0].token)
+			.expect(200)
+			.expect((res) => {
+				expect(res.body._id).toBe(users[0]._id.toHexString());
+				expect(res.body.email).toBe(users[0].email);
+			})
+			.end(done);
+	});
+
+	it('should return 401 if not authenticated', (done) => {
+		request(app)
+			.get('/users/me')
+			.expect(401)
+			.expect((res) => {
+				// should be empty object
+				expect(res.body).toEqual({});
+			})
+			.end(done);
+	})
+});
+
+describe('POST /users', () => {
+	it('should create a user', (done) => {
+		var email = 'newemail@example.com';
+		var password = 'newpass';
+
+		request(app)
+			.post('/users')
+			.send({email, password})
+			.expect(200)
+			.expect((res) => {
+				// use header to check if the user contain x-auth token
+				// because x-auth has -, we need to use [] to access the object rather than .
+				expect(res.headers['x-auth']).toBeTruthy();
+				expect(res.body.email).toBeTruthy();
+				expect(res.body._id).toBeTruthy();
+			})
+			.end((err) => {
+				if (err) {
+					return done(err);
+				}
+
+				// Because this is a post request, we need to check more even we those three fields actually exist
+				// Check by querying the database to see if the new user is actually created
+				User.findOne({email}).then((user) => {
+					expect(user).toBeTruthy();
+					// new syntax documentation: https://facebook.github.io/jest/docs/en/expect.html#not
+					expect(user.password).not.toBe(password);
+					done();
+				})
+			});
+	});
+
+	it('should return validation error if request invalid', (done) => {
+		var email = 'abcabc';
+		var password = 'ddd';
+
+		request(app)
+			.post('/users')
+			.send({email, password})
+			.expect(400)
+			.end(done);
+	});
+
+	it('should not create user if email in use', (done) => {
+		var email = users[0].email;
+		var password = 'abcddddd';
+
+		request(app)
+			.post('/users')
+			.send({email, password})
+			.expect(400)
+			.end(done);
+	});
+})
