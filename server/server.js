@@ -3,6 +3,7 @@ require('./config/config');
 var express = require('express');
 var bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const bcrypt = require('bcryptjs');
 const _ = require('lodash');
 
 
@@ -179,7 +180,39 @@ app.get('/users/me', authenticate, (req, res) => {
 	// 	// 401 means authentication didn't succeed
 	// 	res.status(401).send();
 	// });
-})
+});
+
+app.post('/users/login', (req, res) => {
+
+// app.post('users/login', (req, res) => {
+
+// 	// res.send("abc");
+	var body = _.pick(req.body, ['email', 'password']);
+
+	User.findByCredentials(body.email, body.password).then((user) => {
+		// then((token)...) needs to be appended after the method that returns a token promise
+		return user.generateAuthToken().then((token) => {
+			res.header('x-auth', token).status(200).send(user);
+		});
+	})
+	.catch((err) => {
+		res.status(400).send();
+
+	});
+
+	// // This method doesn't return the proper token for access other parts of the web app
+	// // Use another Model method for properly handle this
+	// User.findOne({email}).then((user) => {
+	// 	bcrypt.compare(password, user.password, (err, result) => {
+	// 		if (err) {
+	// 			return res.status(404).send(err);
+	// 		}
+	// 		res.status(200).send(user);
+	// 	});
+	// })
+	// .catch((err) => res.status(400).send(err));
+
+});
 
 
 app.listen(port, () => {

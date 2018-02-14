@@ -111,6 +111,49 @@ UserSchema.statics.findByToken = function (token) {
 	})
 };
 
+// Check user's login info. Return a promise of user or error properly
+	// include authentication proof (token)
+// need to return promise (resolve or reject)
+UserSchema.statics.findByCredentials = function (email, password) {
+	// we need a user schema variable to access different search methods
+	var User = this;
+
+	return User.findOne({email}).then((user) => {
+		if (!user) {
+			return Promise.reject();
+		}
+		return new Promise((resolve, reject) => {
+			bcrypt.compare(password, user.password, (err, res) => {
+				if (res) {
+					resolve(user);
+				} else {
+					reject();
+				}
+
+				/*
+				// want to resolve only if res is true!! not the other way around
+				if (err) {
+					return Promise.reject();
+				}
+				return Promise.resolve(user);
+				*/
+			});
+		});
+		/*
+		// all bcrypt methods support only callback, not promise
+			// to return promise, need to return a newly constructed promise object
+				// new Promise((resolve, reject) => {})
+		bcrypt.compare(password, user.password, (err, result) => {
+			if (err) {
+				return Promise.reject();
+			}
+			// res.status(200).send(user);
+			return Promise.resolve(user);
+		});
+		*/
+	});
+};
+
 
 // At this point the POST request header will contain the plain text version of the password
 UserSchema.pre('save', function (next) {
