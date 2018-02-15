@@ -80,6 +80,21 @@ UserSchema.methods.generateAuthToken = function () {
 	});
 };
 
+UserSchema.methods.removeToken = function (token) {
+	// $pull mongoose methods that remove some items that satisfy certain criteria
+	var user = this;
+
+	return user.update({
+		$pull: {
+			tokens: {
+				// the entire token object will be removed if token is found
+				// token: token
+				token
+			}
+		}
+	})
+};
+
 // .statics creates a model method (static method of the model) 
 // again use function () {} because we need this binding
 UserSchema.statics.findByToken = function (token) {
